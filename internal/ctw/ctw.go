@@ -5,6 +5,9 @@ import (
 	"bytes"
 	"fmt"
 	"math"
+	"strings"
+
+	"github.com/mattn/go-runewidth"
 )
 
 type CTW struct {
@@ -44,7 +47,7 @@ func (w *CTW) AddRow(args ...string) {
 	}
 
 	w.sw = append(w.sw, len(args[0]))
-	w.nw = append(w.nw, len(args[2]))
+	w.nw = append(w.nw, runewidth.StringWidth(args[2]))
 	w.gw = append(w.gw, len(args[3]))
 
 	if w.showIcon == false {
@@ -176,7 +179,12 @@ func (w *CTW) printCell(buf *bytes.Buffer, i int, cs [4]int) {
 	if w.showIcon {
 		fmt.Fprintf(buf, "%s%1s%s%s", w.ic[i], w.d[i][1], noColor, brailEmpty)
 	}
-	fmt.Fprintf(buf, "%s%-*s%s", getGitColor(w.d[i][3]), cs[2], w.d[i][2], noColor)
+	name := w.d[i][2]
+	pad := cs[2] - runewidth.StringWidth(name)
+	if pad < 0 {
+		pad = 0
+	}
+	fmt.Fprintf(buf, "%s%s%s%s", getGitColor(w.d[i][3]), name, strings.Repeat(" ", pad), noColor)
 
 	if cs[3] > 0 {
 		fmt.Fprintf(buf, "%s%s%1s%s", brailEmpty, getGitColor(w.d[i][3]), w.d[i][3], noColor)
